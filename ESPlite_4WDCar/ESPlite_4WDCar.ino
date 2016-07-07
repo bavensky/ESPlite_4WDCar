@@ -1,5 +1,3 @@
-#define MQTT_MAX_PACKET_SIZE 1024
-
 #include <AuthClient.h>
 #include <MicroGear.h>
 #include <ArduinoJson.h>
@@ -11,6 +9,8 @@
 #include <MicroGear.h>
 #include "timer.hpp"
 
+#define MQTT_MAX_PACKET_SIZE 1024
+
 const char* ssid     = "ESPERT-002";
 const char* password = "espertap";
 
@@ -20,8 +20,11 @@ const char* password = "espertap";
 #define SECRET       "0U1SeCu3QDEeDIGcEKpRrOVDb"
 #define ALIAS        "car"
 
-#define PUBLISH_EVERY_SECS (2*1000)
+#define LEDPin 16
+#define DHTPIN 12
+#define DHTTYPE DHT22
 
+#define PUBLISH_EVERY_SECS (2*1000)
 
 WiFiClient client;
 AuthClient *authclient;
@@ -37,39 +40,32 @@ JsonObject *cmmc_info;
 StaticJsonBuffer<800> jsonRootBuffer;
 StaticJsonBuffer<512> jsonDBuffer;
 
-
 int timer = 0;
 MicroGear microgear(client);
+
+#define ENA 1
+#define ENB 3
+#define IN1 12
+#define IN2 13
+#define IN3 14
+#define IN4 15
 
 #include "_publish.h"
 #include "_receive.h"
 #include "utils.h"
-
-#define B_OK 13
-#define B_UP 12
-#define B_DOWN 14
-#define L_LED 0
-#define C_LED 15
-#define R_LED 2
-
-int dimmer = 0;
-byte ok_state, up_state, down_state, toggle;
 
 void init_wifi();
 void microgear_loop();
 
 void init_hardware() {
   Serial.begin(115200);
+  pinMode(LEDPin, OUTPUT);
 
-  pinMode(L_LED, OUTPUT);
-  pinMode(L_LED, OUTPUT);
-  pinMode(L_LED, OUTPUT);
-  pinMode(C_LED, OUTPUT);
-  pinMode(R_LED, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
 
-  digitalWrite(L_LED, LOW);
-  digitalWrite(C_LED, LOW);
-  digitalWrite(R_LED, LOW);
   Serial.println("Starting...");
 }
 
@@ -88,7 +84,7 @@ void microgear_loop() {
   if (microgear.connected()) {
     microgear.loop();
     timer001.every_ms(PUBLISH_EVERY_SECS, [&]() {
-      _publish();
+//      _publish();
     });
   }
   else {
